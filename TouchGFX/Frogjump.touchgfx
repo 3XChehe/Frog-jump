@@ -1,0 +1,321 @@
+{
+  "Application": {
+    "Screens": [
+      {
+        "Name": "Screen1",
+        "Components": [
+          {
+            "Type": "Image",
+            "Name": "background",
+            "Width": 240,
+            "Height": 320,
+            "RelativeFilename": "start_screen.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "start_button",
+            "X": 12,
+            "Y": 240,
+            "Width": 120,
+            "Height": 80,
+            "RelativeFilename": "start_button.png"
+          }
+        ],
+        "Interactions": []
+      },
+      {
+        "Name": "Screen2",
+        "Components": [
+          {
+            "Type": "Image",
+            "Name": "road1",
+            "X": -120,
+            "Y": 256,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "road1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "road2",
+            "X": -120,
+            "Y": 224,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "road2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "road3",
+            "X": -120,
+            "Y": 192,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "road1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "grass1",
+            "X": -120,
+            "Y": 288,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "grass1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "road4",
+            "X": -120,
+            "Y": 160,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "road2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "cat",
+            "X": 104,
+            "Y": 288,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "cat.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_1_r",
+            "X": 154,
+            "Y": 256,
+            "Width": 48,
+            "Height": 32,
+            "RelativeFilename": "car_1_r.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_3_r",
+            "X": 154,
+            "Y": 192,
+            "Width": 80,
+            "Height": 32,
+            "RelativeFilename": "car_3_r.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_5_r",
+            "X": 154,
+            "Y": 160,
+            "Width": 64,
+            "Height": 32,
+            "RelativeFilename": "car_5_r.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_2_r",
+            "X": 154,
+            "Y": 224,
+            "Width": 64,
+            "Height": 32,
+            "RelativeFilename": "car_2_r.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_3_l",
+            "Y": 192,
+            "Width": 80,
+            "Height": 32,
+            "RelativeFilename": "car_3_l.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_5_l",
+            "X": 16,
+            "Y": 160,
+            "Width": 64,
+            "Height": 32,
+            "RelativeFilename": "car_5_l.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_2_l",
+            "X": 16,
+            "Y": 224,
+            "Width": 64,
+            "Height": 32,
+            "RelativeFilename": "car_2_l.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "car_1_l",
+            "X": 32,
+            "Y": 256,
+            "Width": 48,
+            "Height": 32,
+            "RelativeFilename": "car_1_l.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "grass2",
+            "X": -120,
+            "Y": 128,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "grass2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "grass3",
+            "X": -54,
+            "Width": 480,
+            "Height": 32,
+            "RelativeFilename": "grass1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "river3",
+            "Y": 32,
+            "Width": 240,
+            "Height": 32,
+            "RelativeFilename": "river_1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "river2",
+            "Y": 64,
+            "Width": 240,
+            "Height": 32,
+            "RelativeFilename": "river_2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "river1",
+            "Y": 96,
+            "Width": 240,
+            "Height": 32,
+            "RelativeFilename": "river_1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "lotus_pad",
+            "X": 136,
+            "Y": 64,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "lotus_pad.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "crocodie",
+            "X": 40,
+            "Y": 64,
+            "Width": 64,
+            "Height": 32,
+            "RelativeFilename": "croccodie.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "log_1",
+            "X": 168,
+            "Y": 32,
+            "Width": 64,
+            "Height": 32,
+            "RelativeFilename": "log_1.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "log_2",
+            "X": 8,
+            "Y": 96,
+            "Width": 96,
+            "Height": 32,
+            "RelativeFilename": "log_2.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "cash",
+            "X": 122,
+            "Y": 224,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "cash.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "heart",
+            "Y": 288,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "heart.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "heart2",
+            "X": 24,
+            "Y": 288,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "heart.png"
+          }
+        ],
+        "Interactions": []
+      }
+    ],
+    "CustomContainerDefinitions": [],
+    "Name": "Frogjump",
+    "Resolution": {
+      "Width": 240,
+      "Height": 320
+    },
+    "SelectedColorDepth": 16,
+    "StartupScreenName": "Screen1",
+    "SelectedStartupLanguage": "GB",
+    "TouchGfxPath": "../Middlewares/ST/touchgfx",
+    "UIPath": ".",
+    "AvailableColorDepths": [
+      16
+    ],
+    "AvailableLCDs": {
+      "16": "LCD16bpp"
+    },
+    "AvailableSections": [
+      "ExtFlashSection",
+      "IntFlashSection"
+    ],
+    "AvailableResolutions": [
+      {
+        "Width": 240,
+        "Height": 320
+      }
+    ],
+    "PhysicalButtons": [],
+    "FrameworkFeatures": {
+      "LCD16bpp": {
+        "Id": "LCD16bpp",
+        "IsEnabled": true
+      }
+    },
+    "GenerateAssetsCommand": "make -f simulator/gcc/Makefile assets -j8",
+    "PostGenerateCommand": "touchgfx update_project --project-file=simulator/msvs/Application.vcxproj",
+    "PostGenerateTargetCommand": "touchgfx update_project",
+    "CompileSimulatorCommand": "make -f simulator/gcc/Makefile -j8",
+    "RunSimulatorCommand": "build\\bin\\simulator.exe",
+    "CompileTargetCommandOverride": "make -f ../gcc/Makefile -j8",
+    "FlashTargetCommandOverride": "make -f ../gcc/Makefile flash",
+    "LandscapeSkinX": 0,
+    "LandscapeSkinY": 0,
+    "PortraitSkinX": 0,
+    "PortraitSkinY": 0,
+    "DisplayOrientation": "Portrait",
+    "Family": "STM32F4",
+    "SubFamily": "STM32F429/439",
+    "Toolchain": "STM32CubeIDE",
+    "Platform": "m4",
+    "ProjectFile": "../STM32F429I_DISCO_REV_D01.ioc",
+    "OptionalComponentsRoot": "../Middlewares/ST/touchgfx_components",
+    "OptionalComponents": [],
+    "AdditionalFeatures": [
+      "CWRVector",
+      "VectorFonts"
+    ]
+  },
+  "Version": "4.25.0",
+  "CreatedBy": "4.25.0"
+}
