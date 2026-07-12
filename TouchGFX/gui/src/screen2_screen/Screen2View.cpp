@@ -78,10 +78,17 @@ void Screen2View::setupScreen()
     hideDesignerCars();
     hideDesignerRiverObjs();
 
-    /* Khởi tạo 3 hệ thống */
-    initRoadObstacles();    // A) Đường
+    /* Thêm cash vào danh sách hiển thị trước xe cộ (để xe đè lên tiền về Z-order) */
+    remove(cash);
+    add(cash);
+
+    /* Khởi tạo 3 hệ thống (carWidgets được add sau cash nên sẽ đè lên tiền) */
+    initRoadObstacles();    // A) Đường — lúc này roadLanes[i].y mới được khởi tạo (160, 192, 224, 256)
     initRiverLogs();        // B) Sông
     initFinishZone();       // C) Đích (lá sen + cá sấu tĩnh)
+
+    /* Sau khi roadLanes đã có tọa độ Y chuẩn xác, sinh vị trí cash ngẫu nhiên trên các làn đường */
+    spawnRandomCash();
 
     /* Đảm bảo cat luôn nằm trên cùng (z-order cao nhất) */
     remove(cat);
@@ -175,7 +182,14 @@ void Screen2View::handleTickEvent()
         }
     }
 
-    /* ĐÍCH không cần update — vật thể TĨNH */
+    /* Kiểm tra sinh cash ngẫu nhiên theo số tick khi chưa có cash trên màn hình */
+    if (hasCash == 0)
+    {
+        if (randRange(0,100) == 71)
+        {
+            spawnRandomCash();
+        }
+    }
 
     /* Kiểm tra va chạm xe sau mỗi tick */
     checkCollisions();
@@ -588,14 +602,15 @@ int16_t Screen2View::randRange(int16_t lo, int16_t hi)
  * ================================================================ */
 void Screen2View::moveCat(uint16_t cmd)
 {
-    int16_t step = OBJ_H; /* 32 pixel — bằng chính xác độ rộng 1 làn đường */
+    int16_t stepY = OBJ_H;                         /* 32 pixel — đi lên/xuống bằng 1 làn đường */
+    int16_t stepX = (int16_t)((OBJ_H * 60) / 100); /* 19 pixel — sang trái/phải bằng 60% đi lên/xuống */
     int16_t newX = cat.getX();
     int16_t newY = cat.getY();
 
     switch (cmd)
     {
     case CMD_CAT_LEFT:
-        newX -= step;
+        newX -= stepX;
         if (newX < 0)
         {
             newX = 0;
@@ -604,7 +619,7 @@ void Screen2View::moveCat(uint16_t cmd)
         break;
 
     case CMD_CAT_RIGHT:
-        newX += step;
+        newX += stepX;
         if (newX + cat.getWidth() > SCREEN_W)
         {
             newX = SCREEN_W - cat.getWidth();
@@ -613,7 +628,7 @@ void Screen2View::moveCat(uint16_t cmd)
         break;
 
     case CMD_CAT_UP:
-        newY -= step;
+        newY -= stepY;
         if (newY < 0)
         {
             newY = 0;
@@ -622,7 +637,7 @@ void Screen2View::moveCat(uint16_t cmd)
         break;
 
     case CMD_CAT_DOWN:
-        newY += step;
+        newY += stepY;
         if (newY + cat.getHeight() > 320)
         {
             newY = 320 - cat.getHeight();
@@ -720,6 +735,22 @@ void Screen2View::checkCollisions()
                     return;
                 }
             }
+
+            /* Nếu an toàn không bị xe đâm, kiểm tra xem có nhặt được tiền (cash) không */
+            if (hasCash == 1 && cash.isVisible() && catY == cash.getY())
+            {
+                int16_t cashX = cash.getX();
+                int16_t cashW = (cash.getWidth() > 0) ? cash.getWidth() : 32;
+                if (catX + margin < cashX + cashW && catX + catW - margin > cashX)
+                {
+                    /* Nhặt được tiền -> ẩn cash đi và gán hasCash = 0 */
+                    cash.setVisible(false);
+                    cash.invalidate();
+                    hasCash = 0;
+                    /* TODO: Thêm điểm cho người chơi (hệ thống điểm sẽ được xử lý sau) */
+                }
+            }
+
             return; /* Đang ở trên đường bộ (và không đụng xe), an toàn */
         }
     }
@@ -754,4 +785,24 @@ void Screen2View::checkCollisions()
             return; /* Đang đứng an toàn trên gỗ */
         }
     }
+}
+
+/* ================================================================
+ *  SINH CASH NGẪU NHIÊN TRÊN CÁC LÀN ĐƯỜNG
+ * ================================================================ */
+void Screen2View::spawnRandomCash()
+{
+    /* Chọn ngẫu nhiên 1 trong 4 làn đường (0 đến 3) */
+    int laneIdx = nextRandom() % NUM_ROAD_LANES;
+    int16_t newY = roadLanes[laneIdx].y;
+
+    /* Chọn ngẫu nhiên vị trí X trên làn đó */
+    int16_t maxW = (cash.getWidth() > 0) ? cash.getWidth() : 32;
+    int16_t newX = randRange(10, SCREEN_W - maxW - 10);
+    hasCash = 1;
+
+    cash.setVisible(true);
+    cash.invalidate();
+    cash.setXY(newX, newY);
+    cash.invalidate();
 }

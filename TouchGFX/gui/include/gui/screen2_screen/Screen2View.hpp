@@ -148,10 +148,12 @@ protected:
     uint32_t tickCount;
     uint32_t rngState;
     int16_t  lives;
+    uint8_t  hasCash;
 
     /* ---- Xử lý va chạm & tim ---- */
     void checkCollisions();
     void resetCatPositionAndLoseLife();
+    void spawnRandomCash();
 
     /* ---- ĐƯỜNG ---- */
     void initRoadObstacles();
