@@ -86,6 +86,15 @@ void Screen2View::setupScreen()
     /* Đảm bảo cat luôn nằm trên cùng (z-order cao nhất) */
     remove(cat);
     add(cat);
+
+    /* Khởi tạo số tim (3 tim ban đầu) */
+    lives = 3;
+    heart.setVisible(true);
+    heart.invalidate();
+    heart2.setVisible(true);
+    heart2.invalidate();
+    heart3.setVisible(true);
+    heart3.invalidate();
 }
 
 void Screen2View::tearDownScreen()
@@ -120,9 +129,56 @@ void Screen2View::handleTickEvent()
             updateRiverLane(i);
         }
         renderLogs();
+
+        /* Nếu cat đang đứng trên sông và trên gỗ -> cuốn theo gỗ trôi */
+        int16_t catY = cat.getY();
+        for (int i = 0; i < NUM_RIVER_LANES; i++)
+        {
+            if (catY == riverLanes[i].y)
+            {
+                int16_t catX = cat.getX();
+                int16_t catW = cat.getWidth();
+                bool onLog = false;
+
+                for (int j = 0; j < MAX_LOGS_PER_RIVER; j++)
+                {
+                    if (!riverLanes[i].logs[j].active) continue;
+                    int16_t logX = riverLanes[i].logs[j].x;
+                    int16_t logW = logTypeDefs[riverLanes[i].logs[j].typeIdx].width;
+
+                    /* Kiểm tra cat đứng trên khúc gỗ (dung sai 6px từ 2 bên mép) */
+                    if (catX + catW - 6 > logX && catX + 6 < logX + logW)
+                    {
+                        onLog = true;
+                        break;
+                    }
+                }
+
+                if (onLog)
+                {
+                    int16_t newCatX = catX + (riverLanes[i].speed * riverLanes[i].dir);
+                    /* Nếu bị cuốn trôi hẳn ra ngoài màn hình -> mất mạng như rơi xuống sông */
+                    if (newCatX + catW < 0 || newCatX > SCREEN_W)
+                    {
+                        resetCatPositionAndLoseLife();
+                        return;
+                    }
+                    if (newCatX != catX)
+                    {
+                        cat.invalidate();
+                        cat.setXY(newCatX, catY);
+                        cat.invalidate();
+                    }
+                }
+                break;
+            }
+        }
     }
 
     /* ĐÍCH không cần update — vật thể TĨNH */
+
+    /* Kiểm tra va chạm xe sau mỗi tick */
+    checkCollisions();
 }
 
 /* ================================================================
@@ -500,56 +556,12 @@ void Screen2View::renderLogs()
  * ================================================================ */
 void Screen2View::initFinishZone()
 {
-    /* Tắt hết tất cả trước khi sinh ngẫu nhiên */
+    /* Ẩn hết tất cả vật thể ở vùng đích (bỏ lá sen, cá sấu) */
     for (int i = 0; i < NUM_FINISH_OBJS; i++)
     {
         finishSlots[i].active = false;
         finishWidgets[i].setVisible(false);
-    }
-
-    /* Sinh ngẫu nhiên từ 2 đến 4 lá sen */
-    int numPads = randRange(2, 4); 
-    for (int i = 0; i < numPads; i++)
-    {
-        int16_t startX;
-        bool canPlace;
-        int attempts = 0;
-        
-        /* Tìm vị trí X ngẫu nhiên không đè lên các lá sen trước đó */
-        do {
-            canPlace = true;
-            startX = randRange(0, SCREEN_W - 32); /* Width của lá sen là 32 */
-            for (int j = 0; j < i; j++) {
-                if (finishSlots[j].active) {
-                    int16_t diff = startX - finishSlots[j].x;
-                    if (diff < 0) diff = -diff;
-                    if (diff < 40) { /* Cần cách nhau ít nhất 40 pixel */
-                        canPlace = false;
-                        break;
-                    }
-                }
-            }
-            attempts++;
-        } while (!canPlace && attempts < 50);
-
-        if (canPlace) 
-        {
-            uint8_t objType = 0; /* 0: lá sen */
-
-            finishSlots[i].active  = true;
-            finishSlots[i].x       = startX;
-            finishSlots[i].typeIdx = objType;
-
-            int16_t oW = finishObjDefs[objType].width;
-            finishWidgets[i].setBitmap(
-                touchgfx::Bitmap(finishObjDefs[objType].bmpId));
-            finishWidgets[i].setWidth(oW);
-            finishWidgets[i].setHeight(OBJ_H);
-            finishWidgets[i].setXY(startX, FINISH_Y);
-            finishWidgets[i].setVisible(true);
-            add(finishWidgets[i]);
-            finishWidgets[i].invalidate();
-        }
+        finishWidgets[i].invalidate();
     }
 }
 
@@ -627,5 +639,119 @@ void Screen2View::moveCat(uint16_t cmd)
         cat.invalidate();
         cat.setXY(newX, newY);
         cat.invalidate();
+
+        /* Kiểm tra va chạm ngay sau bước nhảy */
+        checkCollisions();
+    }
+}
+
+/* ================================================================
+ *  XỬ LÝ VA CHẠM & TIM
+ * ================================================================ */
+void Screen2View::resetCatPositionAndLoseLife()
+{
+    /* Đưa cat về vị trí xuất phát (104, 288) */
+    cat.invalidate();
+    cat.setXY(104, 288);
+    cat.invalidate();
+
+    /* Trừ đi 1 tim */
+    lives--;
+    if (lives == 2)
+    {
+        heart3.setVisible(false);
+        heart3.invalidate();
+    }
+    else if (lives == 1)
+    {
+        heart2.setVisible(false);
+        heart2.invalidate();
+    }
+    else if (lives <= 0)
+    {
+        heart.setVisible(false);
+        heart.invalidate();
+
+        /* Khi hết tim, tạm thời hồi lại 3 tim và cho phép chơi tiếp (hoặc reset game) */
+        lives = 3;
+        heart.setVisible(true);
+        heart.invalidate();
+        heart2.setVisible(true);
+        heart2.invalidate();
+        heart3.setVisible(true);
+        heart3.invalidate();
+    }
+}
+
+void Screen2View::checkCollisions()
+{
+    int16_t catX = cat.getX();
+    int16_t catY = cat.getY();
+    int16_t catW = cat.getWidth();
+    int16_t margin = 4; /* dung sai 4px để va chạm chính xác, không gây ức chế */
+
+    /* 0. Kiểm tra nếu mèo đã sang được bờ bên kia (Y = 0 / FINISH_Y) */
+    if (catY == FINISH_Y)
+    {
+        /* Sang bờ bên kia thành công! Reset về vị trí ban đầu (104, 288) và KHÔNG mất tim */
+        cat.invalidate();
+        cat.setXY(104, 288);
+        cat.invalidate();
+        /* TODO: Cộng 1 điểm cho người chơi (hệ thống điểm sẽ được thiết kế sau) */
+        return;
+    }
+
+    /* 1. Kiểm tra va chạm với xe trên ĐƯỜNG (khi cat đứng trên các làn Y = 160, 192, 224, 256) */
+    for (int i = 0; i < NUM_ROAD_LANES; i++)
+    {
+        if (catY == roadLanes[i].y)
+        {
+            for (int j = 0; j < MAX_CARS_PER_LANE; j++)
+            {
+                if (!roadLanes[i].cars[j].active) continue;
+
+                int16_t carX = roadLanes[i].cars[j].x;
+                int16_t carW = carTypeDefs[roadLanes[i].cars[j].typeIdx].width;
+
+                /* Nếu cat và xe giao nhau theo trục X */
+                if (catX + margin < carX + carW && catX + catW - margin > carX)
+                {
+                    resetCatPositionAndLoseLife();
+                    return;
+                }
+            }
+            return; /* Đang ở trên đường bộ (và không đụng xe), an toàn */
+        }
+    }
+
+    /* 2. Kiểm tra khi đứng trên SÔNG (khi cat đứng trên các làn Y = 32, 64, 96) */
+    for (int i = 0; i < NUM_RIVER_LANES; i++)
+    {
+        if (catY == riverLanes[i].y)
+        {
+            bool onLog = false;
+            for (int j = 0; j < MAX_LOGS_PER_RIVER; j++)
+            {
+                if (!riverLanes[i].logs[j].active) continue;
+
+                int16_t logX = riverLanes[i].logs[j].x;
+                int16_t logW = logTypeDefs[riverLanes[i].logs[j].typeIdx].width;
+
+                /* Nếu cat có chân đứng trên khúc gỗ này (dung sai 6px từ 2 bên mép) */
+                if (catX + catW - 6 > logX && catX + 6 < logX + logW)
+                {
+                    onLog = true;
+                    break;
+                }
+            }
+
+            /* Nếu dẫm lên sông mà KHÔNG có khúc gỗ ở dưới -> rớt xuống nước chết (như đâm xe) */
+            if (!onLog)
+            {
+                resetCatPositionAndLoseLife();
+                return;
+            }
+            return; /* Đang đứng an toàn trên gỗ */
+        }
     }
 }

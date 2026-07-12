@@ -147,6 +147,11 @@ protected:
     /* ---- Trạng thái game ---- */
     uint32_t tickCount;
     uint32_t rngState;
+    int16_t  lives;
+
+    /* ---- Xử lý va chạm & tim ---- */
+    void checkCollisions();
+    void resetCatPositionAndLoseLife();
 
     /* ---- ĐƯỜNG ---- */
     void initRoadObstacles();

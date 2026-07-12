@@ -28,6 +28,15 @@
         "Components": [
           {
             "Type": "Image",
+            "Name": "heart2_1",
+            "X": 24,
+            "Y": 288,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "heart.png"
+          },
+          {
+            "Type": "Image",
             "Name": "road1",
             "X": -120,
             "Y": 256,
@@ -83,7 +92,7 @@
           {
             "Type": "Image",
             "Name": "car_1_r",
-            "X": 154,
+            "X": 162,
             "Y": 256,
             "Width": 48,
             "Height": 32,
@@ -249,6 +258,15 @@
             "Type": "Image",
             "Name": "heart2",
             "X": 24,
+            "Y": 288,
+            "Width": 32,
+            "Height": 32,
+            "RelativeFilename": "heart.png"
+          },
+          {
+            "Type": "Image",
+            "Name": "heart3",
+            "X": 48,
             "Y": 288,
             "Width": 32,
             "Height": 32,
