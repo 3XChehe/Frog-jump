@@ -70,7 +70,10 @@ void Error_Handler(void);
 #define SPI5_NCS_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
-
+#define CMD_CAT_LEFT   1
+#define CMD_CAT_UP     2
+#define CMD_CAT_DOWN   3
+#define CMD_CAT_RIGHT  4
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

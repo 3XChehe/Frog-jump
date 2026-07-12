@@ -25,6 +25,8 @@ public:
      */
     virtual void deactivate();
 
+    virtual void onCommandReceived(uint16_t cmd);
+
     virtual ~Screen2Presenter() {}
 
 private:

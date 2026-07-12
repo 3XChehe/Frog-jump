@@ -125,6 +125,7 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
     virtual void handleTickEvent();
+    void moveCat(uint16_t cmd);
 
 protected:
     /* ---- Pool widget Image ---- */

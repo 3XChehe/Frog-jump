@@ -16,6 +16,7 @@
 
 #include <gui/screen2_screen/Screen2View.hpp>
 #include <BitmapDatabase.hpp>
+#include "main.h"
 
 extern "C"
 {
@@ -81,6 +82,10 @@ void Screen2View::setupScreen()
     initRoadObstacles();    // A) Đường
     initRiverLogs();        // B) Sông
     initFinishZone();       // C) Đích (lá sen + cá sấu tĩnh)
+
+    /* Đảm bảo cat luôn nằm trên cùng (z-order cao nhất) */
+    remove(cat);
+    add(cat);
 }
 
 void Screen2View::tearDownScreen()
@@ -564,4 +569,63 @@ int16_t Screen2View::randRange(int16_t lo, int16_t hi)
     if (lo >= hi) return lo;
     uint32_t range = (uint32_t)(hi - lo + 1);
     return lo + (int16_t)(nextRandom() % range);
+}
+
+/* ================================================================
+ *  DI CHUYỂN CAT THEO SỰ KIỆN NÚT NHẤN (MỖI BƯỚC = 1 LÀN ĐƯỜNG)
+ * ================================================================ */
+void Screen2View::moveCat(uint16_t cmd)
+{
+    int16_t step = OBJ_H; /* 32 pixel — bằng chính xác độ rộng 1 làn đường */
+    int16_t newX = cat.getX();
+    int16_t newY = cat.getY();
+
+    switch (cmd)
+    {
+    case CMD_CAT_LEFT:
+        newX -= step;
+        if (newX < 0)
+        {
+            newX = 0;
+            if (newX >= cat.getX()) return; /* Không ra ngoài màn hình bên trái */
+        }
+        break;
+
+    case CMD_CAT_RIGHT:
+        newX += step;
+        if (newX + cat.getWidth() > SCREEN_W)
+        {
+            newX = SCREEN_W - cat.getWidth();
+            if (newX <= cat.getX()) return; /* Không ra ngoài màn hình bên phải */
+        }
+        break;
+
+    case CMD_CAT_UP:
+        newY -= step;
+        if (newY < 0)
+        {
+            newY = 0;
+            if (newY >= cat.getY()) return; /* Không ra ngoài màn hình phía trên */
+        }
+        break;
+
+    case CMD_CAT_DOWN:
+        newY += step;
+        if (newY + cat.getHeight() > 320)
+        {
+            newY = 320 - cat.getHeight();
+            if (newY <= cat.getY()) return; /* Không ra ngoài màn hình phía dưới */
+        }
+        break;
+
+    default:
+        return;
+    }
+
+    if (newX != cat.getX() || newY != cat.getY())
+    {
+        cat.invalidate();
+        cat.setXY(newX, newY);
+        cat.invalidate();
+    }
 }
