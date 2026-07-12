@@ -18,7 +18,11 @@ public:
         model.tick();
         FrontendApplicationBase::handleTickEvent();
     }
+
+    void gotoScreen2ScreenNoTransition();
 private:
+    void gotoScreen2ScreenNoTransitionImpl();
+    touchgfx::Callback<FrontendApplication> transitionCallback_Screen2;
 };
 
 #endif // FRONTENDAPPLICATION_HPP

@@ -11,6 +11,7 @@ public:
     virtual ~Screen1View() {}
     virtual void setupScreen();
     virtual void tearDownScreen();
+    virtual void handleClickEvent(const touchgfx::ClickEvent& event);
 protected:
 };
 
