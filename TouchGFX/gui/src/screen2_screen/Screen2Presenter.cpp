@@ -41,6 +41,14 @@ void Screen2Presenter::notifyScore()
     }
 }
 
+void Screen2Presenter::playSound(SoundEvent sound)
+{
+    if (model)
+    {
+        model->playSound(sound);
+    }
+}
+
 void Screen2Presenter::scoreUpdated(uint32_t currentScore, uint32_t highscore)
 {
     view.updateScore(currentScore);

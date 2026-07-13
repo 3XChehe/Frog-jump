@@ -3,6 +3,15 @@
 
 #include <stdint.h>
 
+enum SoundEvent
+{
+    SOUND_JUMP,
+    SOUND_CASH,
+    SOUND_CRASH,
+    SOUND_SINK_WATER,
+    SOUND_GAME_OVER
+};
+
 class ModelListener;
 
 class Model
@@ -20,6 +29,7 @@ public:
     void addScore(uint32_t points);
     void resetCurrentScore();
     void notifyScore();
+    void playSound(SoundEvent sound);
 
     uint32_t getCurrentScore() const { return currentScore; }
     uint32_t getHighscore() const { return highscore; }

@@ -30,6 +30,7 @@ public:
 
     void addScore(uint32_t points);
     void notifyScore();
+    void playSound(SoundEvent sound);
 
     virtual ~Screen2Presenter() {}
 

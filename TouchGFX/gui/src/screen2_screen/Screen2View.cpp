@@ -669,6 +669,11 @@ void Screen2View::moveCat(uint16_t cmd)
         cat.setXY(newX, newY);
         cat.invalidate();
 
+        if (presenter)
+        {
+            presenter->playSound(SOUND_JUMP);
+        }
+
         /* Kiểm tra va chạm ngay sau bước nhảy */
         checkCollisions();
     }
@@ -700,6 +705,11 @@ void Screen2View::resetCatPositionAndLoseLife()
     {
         heart.setVisible(false);
         heart.invalidate();
+
+        if (presenter)
+        {
+            presenter->playSound(SOUND_GAME_OVER);
+        }
 
         /* Khi hết tim, tạm thời hồi lại 3 tim và cho phép chơi tiếp (hoặc reset game) */
         application().gotoScreen3ScreenNoTransition();
@@ -742,6 +752,10 @@ void Screen2View::checkCollisions()
                 /* Nếu cat và xe giao nhau theo trục X */
                 if (catX + margin < carX + carW && catX + catW - margin > carX)
                 {
+                    if (presenter)
+                    {
+                        presenter->playSound(SOUND_CRASH);
+                    }
                     resetCatPositionAndLoseLife();
                     return;
                 }
@@ -760,6 +774,7 @@ void Screen2View::checkCollisions()
                     hasCash = 0;
                     if (presenter)
                     {
+                        presenter->playSound(SOUND_CASH);
                         presenter->addScore(2);
                     }
                 }
@@ -793,6 +808,10 @@ void Screen2View::checkCollisions()
             /* Nếu dẫm lên sông mà KHÔNG có khúc gỗ ở dưới -> rớt xuống nước chết (như đâm xe) */
             if (!onLog)
             {
+                if (presenter)
+                {
+                    presenter->playSound(SOUND_SINK_WATER);
+                }
                 resetCatPositionAndLoseLife();
                 return;
             }
