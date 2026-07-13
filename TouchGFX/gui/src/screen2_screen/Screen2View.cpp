@@ -103,11 +103,24 @@ void Screen2View::setupScreen()
     heart2.invalidate();
     heart3.setVisible(true);
     heart3.invalidate();
+
+    score.setWildcard(scoreBuffer);
+    if (presenter)
+    {
+        presenter->notifyScore();
+    }
 }
 
 void Screen2View::tearDownScreen()
 {
     Screen2ViewBase::tearDownScreen();
+}
+
+void Screen2View::updateScore(uint32_t currentScore)
+{
+    touchgfx::Unicode::snprintf(scoreBuffer, 16, "%d", currentScore);
+    score.resizeToCurrentText();
+    score.invalidate();
 }
 
 /* ================================================================
@@ -707,7 +720,10 @@ void Screen2View::checkCollisions()
         cat.invalidate();
         cat.setXY(104, 288);
         cat.invalidate();
-        /* TODO: Cộng 1 điểm cho người chơi (hệ thống điểm sẽ được thiết kế sau) */
+        if (presenter)
+        {
+            presenter->addScore(5);
+        }
         return;
     }
 
@@ -742,7 +758,10 @@ void Screen2View::checkCollisions()
                     cash.setVisible(false);
                     cash.invalidate();
                     hasCash = 0;
-                    /* TODO: Thêm điểm cho người chơi (hệ thống điểm sẽ được xử lý sau) */
+                    if (presenter)
+                    {
+                        presenter->addScore(2);
+                    }
                 }
             }
 

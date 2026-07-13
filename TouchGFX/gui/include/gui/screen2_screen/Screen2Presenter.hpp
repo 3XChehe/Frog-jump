@@ -26,6 +26,10 @@ public:
     virtual void deactivate();
 
     virtual void onCommandReceived(uint16_t cmd);
+    virtual void scoreUpdated(uint32_t currentScore, uint32_t highscore);
+
+    void addScore(uint32_t points);
+    void notifyScore();
 
     virtual ~Screen2Presenter() {}
 
