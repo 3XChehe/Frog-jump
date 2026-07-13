@@ -23,6 +23,9 @@ EWARM/*.ipcf
 EWARM/*.custom_argvars
 
 # CubeIDE
+/.project
+/.cproject
+STM32CubeIDE/*.launch
 STM32CubeIDE/.settings/
 STM32CubeIDE/Debug/
 STM32CubeIDE/Release/

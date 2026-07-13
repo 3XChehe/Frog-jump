@@ -16,6 +16,7 @@
 
 #include <gui/screen2_screen/Screen2View.hpp>
 #include <BitmapDatabase.hpp>
+#include "main.h"
 
 extern "C"
 {
@@ -77,10 +78,30 @@ void Screen2View::setupScreen()
     hideDesignerCars();
     hideDesignerRiverObjs();
 
-    /* Khởi tạo 3 hệ thống */
-    initRoadObstacles();    // A) Đường
+    /* Thêm cash vào danh sách hiển thị trước xe cộ (để xe đè lên tiền về Z-order) */
+    remove(cash);
+    add(cash);
+
+    /* Khởi tạo 3 hệ thống (carWidgets được add sau cash nên sẽ đè lên tiền) */
+    initRoadObstacles();    // A) Đường — lúc này roadLanes[i].y mới được khởi tạo (160, 192, 224, 256)
     initRiverLogs();        // B) Sông
     initFinishZone();       // C) Đích (lá sen + cá sấu tĩnh)
+
+    /* Sau khi roadLanes đã có tọa độ Y chuẩn xác, sinh vị trí cash ngẫu nhiên trên các làn đường */
+    spawnRandomCash();
+
+    /* Đảm bảo cat luôn nằm trên cùng (z-order cao nhất) */
+    remove(cat);
+    add(cat);
+
+    /* Khởi tạo số tim (3 tim ban đầu) */
+    lives = 3;
+    heart.setVisible(true);
+    heart.invalidate();
+    heart2.setVisible(true);
+    heart2.invalidate();
+    heart3.setVisible(true);
+    heart3.invalidate();
 }
 
 void Screen2View::tearDownScreen()
@@ -115,9 +136,63 @@ void Screen2View::handleTickEvent()
             updateRiverLane(i);
         }
         renderLogs();
+
+        /* Nếu cat đang đứng trên sông và trên gỗ -> cuốn theo gỗ trôi */
+        int16_t catY = cat.getY();
+        for (int i = 0; i < NUM_RIVER_LANES; i++)
+        {
+            if (catY == riverLanes[i].y)
+            {
+                int16_t catX = cat.getX();
+                int16_t catW = cat.getWidth();
+                bool onLog = false;
+
+                for (int j = 0; j < MAX_LOGS_PER_RIVER; j++)
+                {
+                    if (!riverLanes[i].logs[j].active) continue;
+                    int16_t logX = riverLanes[i].logs[j].x;
+                    int16_t logW = logTypeDefs[riverLanes[i].logs[j].typeIdx].width;
+
+                    /* Kiểm tra cat đứng trên khúc gỗ (dung sai 6px từ 2 bên mép) */
+                    if (catX + catW - 6 > logX && catX + 6 < logX + logW)
+                    {
+                        onLog = true;
+                        break;
+                    }
+                }
+
+                if (onLog)
+                {
+                    int16_t newCatX = catX + (riverLanes[i].speed * riverLanes[i].dir);
+                    /* Nếu bị cuốn trôi hẳn ra ngoài màn hình -> mất mạng như rơi xuống sông */
+                    if (newCatX + catW < 0 || newCatX > SCREEN_W)
+                    {
+                        resetCatPositionAndLoseLife();
+                        return;
+                    }
+                    if (newCatX != catX)
+                    {
+                        cat.invalidate();
+                        cat.setXY(newCatX, catY);
+                        cat.invalidate();
+                    }
+                }
+                break;
+            }
+        }
     }
 
-    /* ĐÍCH không cần update — vật thể TĨNH */
+    /* Kiểm tra sinh cash ngẫu nhiên theo số tick khi chưa có cash trên màn hình */
+    if (hasCash == 0)
+    {
+        if (randRange(0,100) == 71)
+        {
+            spawnRandomCash();
+        }
+    }
+
+    /* Kiểm tra va chạm xe sau mỗi tick */
+    checkCollisions();
 }
 
 /* ================================================================
@@ -495,56 +570,12 @@ void Screen2View::renderLogs()
  * ================================================================ */
 void Screen2View::initFinishZone()
 {
-    /* Tắt hết tất cả trước khi sinh ngẫu nhiên */
+    /* Ẩn hết tất cả vật thể ở vùng đích (bỏ lá sen, cá sấu) */
     for (int i = 0; i < NUM_FINISH_OBJS; i++)
     {
         finishSlots[i].active = false;
         finishWidgets[i].setVisible(false);
-    }
-
-    /* Sinh ngẫu nhiên từ 2 đến 4 lá sen */
-    int numPads = randRange(2, 4); 
-    for (int i = 0; i < numPads; i++)
-    {
-        int16_t startX;
-        bool canPlace;
-        int attempts = 0;
-        
-        /* Tìm vị trí X ngẫu nhiên không đè lên các lá sen trước đó */
-        do {
-            canPlace = true;
-            startX = randRange(0, SCREEN_W - 32); /* Width của lá sen là 32 */
-            for (int j = 0; j < i; j++) {
-                if (finishSlots[j].active) {
-                    int16_t diff = startX - finishSlots[j].x;
-                    if (diff < 0) diff = -diff;
-                    if (diff < 40) { /* Cần cách nhau ít nhất 40 pixel */
-                        canPlace = false;
-                        break;
-                    }
-                }
-            }
-            attempts++;
-        } while (!canPlace && attempts < 50);
-
-        if (canPlace) 
-        {
-            uint8_t objType = 0; /* 0: lá sen */
-
-            finishSlots[i].active  = true;
-            finishSlots[i].x       = startX;
-            finishSlots[i].typeIdx = objType;
-
-            int16_t oW = finishObjDefs[objType].width;
-            finishWidgets[i].setBitmap(
-                touchgfx::Bitmap(finishObjDefs[objType].bmpId));
-            finishWidgets[i].setWidth(oW);
-            finishWidgets[i].setHeight(OBJ_H);
-            finishWidgets[i].setXY(startX, FINISH_Y);
-            finishWidgets[i].setVisible(true);
-            add(finishWidgets[i]);
-            finishWidgets[i].invalidate();
-        }
+        finishWidgets[i].invalidate();
     }
 }
 
@@ -564,4 +595,214 @@ int16_t Screen2View::randRange(int16_t lo, int16_t hi)
     if (lo >= hi) return lo;
     uint32_t range = (uint32_t)(hi - lo + 1);
     return lo + (int16_t)(nextRandom() % range);
+}
+
+/* ================================================================
+ *  DI CHUYỂN CAT THEO SỰ KIỆN NÚT NHẤN (MỖI BƯỚC = 1 LÀN ĐƯỜNG)
+ * ================================================================ */
+void Screen2View::moveCat(uint16_t cmd)
+{
+    int16_t stepY = OBJ_H;                         /* 32 pixel — đi lên/xuống bằng 1 làn đường */
+    int16_t stepX = (int16_t)((OBJ_H * 60) / 100); /* 19 pixel — sang trái/phải bằng 60% đi lên/xuống */
+    int16_t newX = cat.getX();
+    int16_t newY = cat.getY();
+
+    switch (cmd)
+    {
+    case CMD_CAT_LEFT:
+        newX -= stepX;
+        if (newX < 0)
+        {
+            newX = 0;
+            if (newX >= cat.getX()) return; /* Không ra ngoài màn hình bên trái */
+        }
+        break;
+
+    case CMD_CAT_RIGHT:
+        newX += stepX;
+        if (newX + cat.getWidth() > SCREEN_W)
+        {
+            newX = SCREEN_W - cat.getWidth();
+            if (newX <= cat.getX()) return; /* Không ra ngoài màn hình bên phải */
+        }
+        break;
+
+    case CMD_CAT_UP:
+        newY -= stepY;
+        if (newY < 0)
+        {
+            newY = 0;
+            if (newY >= cat.getY()) return; /* Không ra ngoài màn hình phía trên */
+        }
+        break;
+
+    case CMD_CAT_DOWN:
+        newY += stepY;
+        if (newY + cat.getHeight() > 320)
+        {
+            newY = 320 - cat.getHeight();
+            if (newY <= cat.getY()) return; /* Không ra ngoài màn hình phía dưới */
+        }
+        break;
+
+    default:
+        return;
+    }
+
+    if (newX != cat.getX() || newY != cat.getY())
+    {
+        cat.invalidate();
+        cat.setXY(newX, newY);
+        cat.invalidate();
+
+        /* Kiểm tra va chạm ngay sau bước nhảy */
+        checkCollisions();
+    }
+}
+
+/* ================================================================
+ *  XỬ LÝ VA CHẠM & TIM
+ * ================================================================ */
+void Screen2View::resetCatPositionAndLoseLife()
+{
+    /* Đưa cat về vị trí xuất phát (104, 288) */
+    cat.invalidate();
+    cat.setXY(104, 288);
+    cat.invalidate();
+
+    /* Trừ đi 1 tim */
+    lives--;
+    if (lives == 2)
+    {
+        heart3.setVisible(false);
+        heart3.invalidate();
+    }
+    else if (lives == 1)
+    {
+        heart2.setVisible(false);
+        heart2.invalidate();
+    }
+    else if (lives <= 0)
+    {
+        heart.setVisible(false);
+        heart.invalidate();
+
+        /* Khi hết tim, tạm thời hồi lại 3 tim và cho phép chơi tiếp (hoặc reset game) */
+        lives = 3;
+        heart.setVisible(true);
+        heart.invalidate();
+        heart2.setVisible(true);
+        heart2.invalidate();
+        heart3.setVisible(true);
+        heart3.invalidate();
+    }
+}
+
+void Screen2View::checkCollisions()
+{
+    int16_t catX = cat.getX();
+    int16_t catY = cat.getY();
+    int16_t catW = cat.getWidth();
+    int16_t margin = 4; /* dung sai 4px để va chạm chính xác, không gây ức chế */
+
+    /* 0. Kiểm tra nếu mèo đã sang được bờ bên kia (Y = 0 / FINISH_Y) */
+    if (catY == FINISH_Y)
+    {
+        /* Sang bờ bên kia thành công! Reset về vị trí ban đầu (104, 288) và KHÔNG mất tim */
+        cat.invalidate();
+        cat.setXY(104, 288);
+        cat.invalidate();
+        /* TODO: Cộng 1 điểm cho người chơi (hệ thống điểm sẽ được thiết kế sau) */
+        return;
+    }
+
+    /* 1. Kiểm tra va chạm với xe trên ĐƯỜNG (khi cat đứng trên các làn Y = 160, 192, 224, 256) */
+    for (int i = 0; i < NUM_ROAD_LANES; i++)
+    {
+        if (catY == roadLanes[i].y)
+        {
+            for (int j = 0; j < MAX_CARS_PER_LANE; j++)
+            {
+                if (!roadLanes[i].cars[j].active) continue;
+
+                int16_t carX = roadLanes[i].cars[j].x;
+                int16_t carW = carTypeDefs[roadLanes[i].cars[j].typeIdx].width;
+
+                /* Nếu cat và xe giao nhau theo trục X */
+                if (catX + margin < carX + carW && catX + catW - margin > carX)
+                {
+                    resetCatPositionAndLoseLife();
+                    return;
+                }
+            }
+
+            /* Nếu an toàn không bị xe đâm, kiểm tra xem có nhặt được tiền (cash) không */
+            if (hasCash == 1 && cash.isVisible() && catY == cash.getY())
+            {
+                int16_t cashX = cash.getX();
+                int16_t cashW = (cash.getWidth() > 0) ? cash.getWidth() : 32;
+                if (catX + margin < cashX + cashW && catX + catW - margin > cashX)
+                {
+                    /* Nhặt được tiền -> ẩn cash đi và gán hasCash = 0 */
+                    cash.setVisible(false);
+                    cash.invalidate();
+                    hasCash = 0;
+                    /* TODO: Thêm điểm cho người chơi (hệ thống điểm sẽ được xử lý sau) */
+                }
+            }
+
+            return; /* Đang ở trên đường bộ (và không đụng xe), an toàn */
+        }
+    }
+
+    /* 2. Kiểm tra khi đứng trên SÔNG (khi cat đứng trên các làn Y = 32, 64, 96) */
+    for (int i = 0; i < NUM_RIVER_LANES; i++)
+    {
+        if (catY == riverLanes[i].y)
+        {
+            bool onLog = false;
+            for (int j = 0; j < MAX_LOGS_PER_RIVER; j++)
+            {
+                if (!riverLanes[i].logs[j].active) continue;
+
+                int16_t logX = riverLanes[i].logs[j].x;
+                int16_t logW = logTypeDefs[riverLanes[i].logs[j].typeIdx].width;
+
+                /* Nếu cat có chân đứng trên khúc gỗ này (dung sai 6px từ 2 bên mép) */
+                if (catX + catW - 6 > logX && catX + 6 < logX + logW)
+                {
+                    onLog = true;
+                    break;
+                }
+            }
+
+            /* Nếu dẫm lên sông mà KHÔNG có khúc gỗ ở dưới -> rớt xuống nước chết (như đâm xe) */
+            if (!onLog)
+            {
+                resetCatPositionAndLoseLife();
+                return;
+            }
+            return; /* Đang đứng an toàn trên gỗ */
+        }
+    }
+}
+
+/* ================================================================
+ *  SINH CASH NGẪU NHIÊN TRÊN CÁC LÀN ĐƯỜNG
+ * ================================================================ */
+void Screen2View::spawnRandomCash()
+{
+    /* Chọn ngẫu nhiên 1 trong 4 làn đường (0 đến 3) */
+    int laneIdx = nextRandom() % NUM_ROAD_LANES;
+    int16_t newY = roadLanes[laneIdx].y;
+
+    /* Chọn ngẫu nhiên vị trí X trên làn đó */
+    int16_t maxW = (cash.getWidth() > 0) ? cash.getWidth() : 32;
+    int16_t newX = randRange(10, SCREEN_W - maxW - 10);
+    hasCash = 1;
+
+    cash.setVisible(true);
+    cash.invalidate();
+    cash.setXY(newX, newY);
+    cash.invalidate();
 }

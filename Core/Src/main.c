@@ -88,6 +88,11 @@ const osThreadAttr_t GUI_Task_attributes = {
   .stack_size = 8192 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
+/* Definitions for myCommandQueue */
+osMessageQueueId_t myCommandQueueHandle;
+const osMessageQueueAttr_t myCommandQueue_attributes = {
+  .name = "myCommandQueue"
+};
 /* USER CODE BEGIN PV */
 uint8_t isRevD = 0; /* Applicable only for STM32F429I DISCOVERY REVD and above */
 /* USER CODE END PV */
@@ -199,6 +204,10 @@ int main(void)
   /* USER CODE BEGIN RTOS_TIMERS */
   /* start timers, add new ones, ... */
   /* USER CODE END RTOS_TIMERS */
+
+  /* Create the queue(s) */
+  /* creation of myCommandQueue */
+  myCommandQueueHandle = osMessageQueueNew (16, sizeof(uint16_t), &myCommandQueue_attributes);
 
   /* USER CODE BEGIN RTOS_QUEUES */
   /* add queues, ... */
@@ -620,12 +629,24 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pins : PA5 PA7 */
+  GPIO_InitStruct.Pin = GPIO_PIN_5|GPIO_PIN_7;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
   /*Configure GPIO pins : PD12 PD13 */
   GPIO_InitStruct.Pin = GPIO_PIN_12|GPIO_PIN_13;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+
+  /*Configure GPIO pins : PG2 PG3 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2|GPIO_PIN_3;
+  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
+  HAL_GPIO_Init(GPIOG, &GPIO_InitStruct);
 
   /* USER CODE BEGIN MX_GPIO_Init_2 */
   /* USER CODE END MX_GPIO_Init_2 */
@@ -967,10 +988,129 @@ void LCD_Delay(uint32_t Delay)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
+  GPIO_PinState prev_pa7 = GPIO_PIN_SET;
+  GPIO_PinState prev_pa5 = GPIO_PIN_SET;
+  GPIO_PinState prev_pg3 = GPIO_PIN_SET;
+  GPIO_PinState prev_pg2 = GPIO_PIN_SET;
+
+  uint32_t hold_pa7 = 0;
+  uint32_t hold_pa5 = 0;
+  uint32_t hold_pg3 = 0;
+  uint32_t hold_pg2 = 0;
+
   /* Infinite loop */
   for(;;)
   {
-    osDelay(100);
+    GPIO_PinState curr_pa7 = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_7); /* LEFT */
+    GPIO_PinState curr_pa5 = HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_5); /* UP */
+    GPIO_PinState curr_pg3 = HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_3); /* DOWN */
+    GPIO_PinState curr_pg2 = HAL_GPIO_ReadPin(GPIOG, GPIO_PIN_2); /* RIGHT */
+
+    /* Process PA7 (LEFT) */
+    if (curr_pa7 == GPIO_PIN_RESET)
+    {
+      if (prev_pa7 == GPIO_PIN_SET)
+      {
+        uint16_t cmd = CMD_CAT_LEFT;
+        osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+        hold_pa7 = 0;
+      }
+      else
+      {
+        hold_pa7++;
+        if (hold_pa7 > 15)
+        {
+          uint16_t cmd = CMD_CAT_LEFT;
+          osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+          hold_pa7 = 10;
+        }
+      }
+    }
+    else
+    {
+      hold_pa7 = 0;
+    }
+    prev_pa7 = curr_pa7;
+
+    /* Process PA5 (UP) */
+    if (curr_pa5 == GPIO_PIN_RESET)
+    {
+      if (prev_pa5 == GPIO_PIN_SET)
+      {
+        uint16_t cmd = CMD_CAT_UP;
+        osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+        hold_pa5 = 0;
+      }
+      else
+      {
+        hold_pa5++;
+        if (hold_pa5 > 15)
+        {
+          uint16_t cmd = CMD_CAT_UP;
+          osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+          hold_pa5 = 10;
+        }
+      }
+    }
+    else
+    {
+      hold_pa5 = 0;
+    }
+    prev_pa5 = curr_pa5;
+
+    /* Process PG3 (DOWN) */
+    if (curr_pg3 == GPIO_PIN_RESET)
+    {
+      if (prev_pg3 == GPIO_PIN_SET)
+      {
+        uint16_t cmd = CMD_CAT_DOWN;
+        osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+        hold_pg3 = 0;
+      }
+      else
+      {
+        hold_pg3++;
+        if (hold_pg3 > 15)
+        {
+          uint16_t cmd = CMD_CAT_DOWN;
+          osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+          hold_pg3 = 10;
+        }
+      }
+    }
+    else
+    {
+      hold_pg3 = 0;
+    }
+    prev_pg3 = curr_pg3;
+
+    /* Process PG2 (RIGHT) */
+    if (curr_pg2 == GPIO_PIN_RESET)
+    {
+      if (prev_pg2 == GPIO_PIN_SET)
+      {
+        uint16_t cmd = CMD_CAT_RIGHT;
+        osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+        hold_pg2 = 0;
+      }
+      else
+      {
+        hold_pg2++;
+        if (hold_pg2 > 15)
+        {
+          uint16_t cmd = CMD_CAT_RIGHT;
+          osMessageQueuePut(myCommandQueueHandle, &cmd, 0, 0);
+          hold_pg2 = 10;
+        }
+      }
+    }
+    else
+    {
+      hold_pg2 = 0;
+    }
+    prev_pg2 = curr_pg2;
+
+    osDelay(20);
   }
   /* USER CODE END 5 */
 }

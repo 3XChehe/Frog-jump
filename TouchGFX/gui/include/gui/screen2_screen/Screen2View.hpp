@@ -125,6 +125,7 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
     virtual void handleTickEvent();
+    void moveCat(uint16_t cmd);
 
 protected:
     /* ---- Pool widget Image ---- */
@@ -146,6 +147,13 @@ protected:
     /* ---- Trạng thái game ---- */
     uint32_t tickCount;
     uint32_t rngState;
+    int16_t  lives;
+    uint8_t  hasCash;
+
+    /* ---- Xử lý va chạm & tim ---- */
+    void checkCollisions();
+    void resetCatPositionAndLoseLife();
+    void spawnRandomCash();
 
     /* ---- ĐƯỜNG ---- */
     void initRoadObstacles();
