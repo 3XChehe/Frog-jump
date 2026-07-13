@@ -16,6 +16,7 @@
 
 #include <gui/screen2_screen/Screen2View.hpp>
 #include <BitmapDatabase.hpp>
+#include <gui/common/FrontendApplication.hpp>
 #include "main.h"
 
 extern "C"
@@ -688,13 +689,7 @@ void Screen2View::resetCatPositionAndLoseLife()
         heart.invalidate();
 
         /* Khi hết tim, tạm thời hồi lại 3 tim và cho phép chơi tiếp (hoặc reset game) */
-        lives = 3;
-        heart.setVisible(true);
-        heart.invalidate();
-        heart2.setVisible(true);
-        heart2.invalidate();
-        heart3.setVisible(true);
-        heart3.invalidate();
+        application().gotoScreen3ScreenNoTransition();
     }
 }
 

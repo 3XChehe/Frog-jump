@@ -271,6 +271,85 @@
             "Width": 32,
             "Height": 32,
             "RelativeFilename": "heart.png"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 210,
+            "Y": 294,
+            "Width": 15,
+            "Height": 20,
+            "TextId": "__SingleUse_OS6I",
+            "TextRotation": "0",
+            "AutoSize": true,
+            "Wildcard1": {}
+          }
+        ],
+        "Interactions": []
+      },
+      {
+        "Name": "Screen3",
+        "Components": [
+          {
+            "Type": "Image",
+            "Name": "end_screen",
+            "Width": 240,
+            "Height": 320,
+            "RelativeFilename": "end_screen.png"
+          },
+          {
+            "Type": "ScalableImage",
+            "Name": "restart",
+            "X": 31,
+            "Y": 243,
+            "Width": 52,
+            "Height": 55,
+            "Filename": "restart.png",
+            "ScalingAlgorithm": "Nearest-neighbor"
+          },
+          {
+            "Type": "ScalableImage",
+            "Name": "home",
+            "X": 156,
+            "Y": 243,
+            "Width": 52,
+            "Height": 55,
+            "Filename": "home.png",
+            "ScalingAlgorithm": "Nearest-neighbor"
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1",
+            "X": 113,
+            "Y": 70,
+            "Width": 15,
+            "Height": 20,
+            "TextId": "__SingleUse_D4L3",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {}
+          },
+          {
+            "Type": "TextArea",
+            "Name": "textArea1_1",
+            "X": 167,
+            "Y": 90,
+            "Width": 15,
+            "Height": 20,
+            "TextId": "__SingleUse_IX69",
+            "TextRotation": "0",
+            "Color": {
+              "Red": 255,
+              "Green": 255,
+              "Blue": 255
+            },
+            "AutoSize": true,
+            "Wildcard1": {}
           }
         ],
         "Interactions": []
