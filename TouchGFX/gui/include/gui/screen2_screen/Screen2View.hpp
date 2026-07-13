@@ -126,8 +126,11 @@ public:
     virtual void tearDownScreen();
     virtual void handleTickEvent();
     void moveCat(uint16_t cmd);
+    void updateScore(uint32_t currentScore);
 
 protected:
+    touchgfx::Unicode::UnicodeChar scoreBuffer[16];
+
     /* ---- Pool widget Image ---- */
     touchgfx::Image carWidgets[NUM_ROAD_LANES][MAX_CARS_PER_LANE];      // 12
     touchgfx::Image logWidgets[NUM_RIVER_LANES][MAX_LOGS_PER_RIVER];    // 9

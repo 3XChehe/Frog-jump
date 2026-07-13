@@ -12,7 +12,10 @@ public:
     virtual void setupScreen();
     virtual void tearDownScreen();
     virtual void handleClickEvent(const touchgfx::ClickEvent& event);
+    void updateScores(uint32_t currentScore, uint32_t highscore);
 protected:
+    touchgfx::Unicode::UnicodeChar scoreBuffer[16];
+    touchgfx::Unicode::UnicodeChar highscoreBuffer[16];
 };
 
 #endif // SCREEN3VIEW_HPP

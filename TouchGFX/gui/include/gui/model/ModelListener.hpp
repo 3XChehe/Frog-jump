@@ -17,6 +17,7 @@ public:
     }
 
     virtual void onCommandReceived(uint16_t cmd) {}
+    virtual void scoreUpdated(uint32_t currentScore, uint32_t highscore) {}
 protected:
     Model* model;
 };

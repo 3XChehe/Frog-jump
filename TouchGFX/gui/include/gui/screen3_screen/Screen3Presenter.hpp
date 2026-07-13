@@ -25,6 +25,8 @@ public:
      */
     virtual void deactivate();
 
+    virtual void scoreUpdated(uint32_t currentScore, uint32_t highscore);
+
     virtual ~Screen3Presenter() {}
 
 private:
