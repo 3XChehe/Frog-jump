@@ -19,21 +19,21 @@ public:
         FrontendApplicationBase::handleTickEvent();
     }
 
-    // Khai báo các hàm chuyển màn hình công khai (Public)
+    // Change screen
     void gotoScreen1ScreenNoTransition();
     void gotoScreen2ScreenNoTransition();
     void gotoScreen3ScreenNoTransition();
 
 private:
-    // Logic Screen 1
+    // Logic change to Screen 1
     void gotoScreen1ScreenNoTransitionImpl();
     touchgfx::Callback<FrontendApplication> transitionCallback_Screen1;
 
-    // Logic Screen 2
+    // Logic change to Screen 2
     void gotoScreen2ScreenNoTransitionImpl();
     touchgfx::Callback<FrontendApplication> transitionCallback_Screen2;
 
-    // Logic Screen 3
+    // Logic change to Screen 3
     void gotoScreen3ScreenNoTransitionImpl();
     touchgfx::Callback<FrontendApplication> transitionCallback_Screen3;
 };

@@ -1,5 +1,3 @@
-// Auto-generated from Sad Game Over Sound Effect.wav
-// Duration: 1.0s, Trimmed, Faded
 #ifndef GAME_OVER_SOUND_H
 #define GAME_OVER_SOUND_H
 

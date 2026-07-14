@@ -1,5 +1,3 @@
-// Auto-generated from Big crash sound - Free sound fx - Crash mix.wav
-// Duration: 1.0s, Trimmed, Faded
 #ifndef CRASH_SOUND_H
 #define CRASH_SOUND_H
 

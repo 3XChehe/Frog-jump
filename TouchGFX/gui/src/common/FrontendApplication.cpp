@@ -13,7 +13,7 @@ FrontendApplication::FrontendApplication(Model& m, FrontendHeap& heap)
 {
 }
 
-// ==================== SCREEN 1 ====================
+// Go to Screen 1
 void FrontendApplication::gotoScreen1ScreenNoTransition()
 {
     transitionCallback_Screen1 = touchgfx::Callback<FrontendApplication>(this, &FrontendApplication::gotoScreen1ScreenNoTransitionImpl);
@@ -25,7 +25,7 @@ void FrontendApplication::gotoScreen1ScreenNoTransitionImpl()
     touchgfx::makeTransition<Screen1View, Screen1Presenter, touchgfx::NoTransition, Model>(&currentScreen, &currentPresenter, frontendHeap, &currentTransition, &model);
 }
 
-// ==================== SCREEN 2 ====================
+// Go to Screen 2
 void FrontendApplication::gotoScreen2ScreenNoTransition()
 {
     transitionCallback_Screen2 = touchgfx::Callback<FrontendApplication>(this, &FrontendApplication::gotoScreen2ScreenNoTransitionImpl);
@@ -37,7 +37,7 @@ void FrontendApplication::gotoScreen2ScreenNoTransitionImpl()
     touchgfx::makeTransition<Screen2View, Screen2Presenter, touchgfx::NoTransition, Model>(&currentScreen, &currentPresenter, frontendHeap, &currentTransition, &model);
 }
 
-// ==================== SCREEN 3 ====================
+// Go to Screen 3
 void FrontendApplication::gotoScreen3ScreenNoTransition()
 {
     transitionCallback_Screen3 = touchgfx::Callback<FrontendApplication>(this, &FrontendApplication::gotoScreen3ScreenNoTransitionImpl);

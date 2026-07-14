@@ -28,13 +28,11 @@ void Screen3View::updateScores(uint32_t currentScore, uint32_t highscore)
 }
 void Screen3View::handleClickEvent(const touchgfx::ClickEvent& event)
 {
-    /* Chỉ xử lý khi nhả tay (RELEASED) để tránh trigger 2 lần */
     if (event.getType() == touchgfx::ClickEvent::RELEASED)
     {
         int16_t x = event.getX();
         int16_t y = event.getY();
 
-        /* Vùng start_button: X=12, Y=240, W=120, H=80 → (12..132, 240..320) */
         if (x >= 32 && x <= 82 && y >= 243 && y <= 298)
         {
             application().gotoScreen2ScreenNoTransition();
@@ -42,7 +40,5 @@ void Screen3View::handleClickEvent(const touchgfx::ClickEvent& event)
         	application().gotoScreen1ScreenNoTransition();
         }
     }
-
-    /* Gọi base để không ảnh hưởng các widget khác */
     Screen3ViewBase::handleClickEvent(event);
 }

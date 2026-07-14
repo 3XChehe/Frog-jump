@@ -1,5 +1,3 @@
-// Auto-generated from cha ching-sound effect download.wav
-// Duration: 1.0s, Trimmed, Faded
 #ifndef CASH_SOUND_H
 #define CASH_SOUND_H
 

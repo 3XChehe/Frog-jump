@@ -1,5 +1,3 @@
-// Auto-generated from Water Drop Sound Effect 3D Sound Effects splash to drips Link In Description.wav
-// Duration: 0.6s, Trimmed, Faded
 #ifndef SINK_WATER_SOUND_H
 #define SINK_WATER_SOUND_H
 
