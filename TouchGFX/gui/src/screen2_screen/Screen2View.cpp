@@ -1,19 +1,3 @@
-/* ================================================================
- *  Screen2View.cpp — OBSTACLE SYSTEM (Frog-jump)
- *
- *  3 hệ thống chướng ngại vật (Happy Hopper style):
- *  ─────────────────────────────────────────────────────────────
- *  A) ĐƯỜNG (4 làn): xe cộ di chuyển → chạm = chết
- *  B) SÔNG  (3 làn): CHỈ CÓ KHÚC GỖ trôi → đứng trên = safe
- *                     rơi xuống nước (không trên gỗ) = chết
- *  C) ĐÍCH  (1 hàng): lá sen TĨNH = an toàn/đích đến
- *                      cá sấu TĨNH = chạm = chết
- *
- *  Vùng an toàn:
- *  — grass1 (Y=288): xuất phát
- *  — grass2 (Y=128): giữa đường và sông, KHÔNG có chướng ngại vật
- * ================================================================ */
-
 #include <gui/screen2_screen/Screen2View.hpp>
 #include <BitmapDatabase.hpp>
 #include <gui/common/FrontendApplication.hpp>
@@ -24,9 +8,7 @@ extern "C"
     uint32_t HAL_GetTick(void);
 }
 
-/* ================================================================
- *  BẢNG THÔNG SỐ CÁC LOẠI XE
- * ================================================================ */
+// Define all CAR TYPE
 const CarTypeDef Screen2View::carTypeDefs[NUM_CAR_TYPES] =
 {
     { BITMAP_CAR_1_R_ID, BITMAP_CAR_1_L_ID, 48 },   // ô tô nhỏ
@@ -35,39 +17,28 @@ const CarTypeDef Screen2View::carTypeDefs[NUM_CAR_TYPES] =
     { BITMAP_CAR_5_R_ID, BITMAP_CAR_5_L_ID, 64 },   // SUV
 };
 
-/* ================================================================
- *  BẢNG THÔNG SỐ KHÚC GỖ (chỉ gỗ, KHÔNG có cá sấu trên sông)
- * ================================================================ */
+// Define all WOOD LOG TYPE
 const LogTypeDef Screen2View::logTypeDefs[NUM_LOG_TYPES] =
 {
-    { BITMAP_LOG_1_ID, 64 },    // gỗ nhỏ (64 × 32)
-    { BITMAP_LOG_2_ID, 96 },    // gỗ lớn (96 × 32)
+    { BITMAP_LOG_1_ID, 64 },    // gỗ nhỏ
+    { BITMAP_LOG_2_ID, 96 },    // gỗ lớn
 };
 
-/* ================================================================
- *  BẢNG THÔNG SỐ VẬT THỂ Ở ĐÍCH (lá sen + cá sấu, TĨNH)
- *
- *  Người chơi phải giẫm vào lá sen mới qua được.
- *  Giẫm vào cá sấu → chết.
- * ================================================================ */
+//Define all FINISH OBJECT TYPE
 const FinishObjDef Screen2View::finishObjDefs[NUM_FINISH_TYPES] =
 {
     { BITMAP_LOTUS_PAD_ID, 32,  true  },   // lá sen — AN TOÀN / ĐÍCH
     { BITMAP_CROCCODIE_ID, 64,  false },   // cá sấu — NGUY HIỂM
 };
 
-/* ================================================================
- *  CONSTRUCTOR
- * ================================================================ */
+//Screen 2 view Logic
 Screen2View::Screen2View()
     : tickCount(0)
     , rngState(0)
 {
 }
 
-/* ================================================================
- *  SETUP SCREEN
- * ================================================================ */
+
 void Screen2View::setupScreen()
 {
     Screen2ViewBase::setupScreen();
@@ -75,27 +46,27 @@ void Screen2View::setupScreen()
     rngState = HAL_GetTick();
     if (rngState == 0) rngState = 42;
 
-    /* Ẩn tất cả vật thể tĩnh từ Designer */
+    // Hide all object (init)
     hideDesignerCars();
     hideDesignerRiverObjs();
 
-    /* Thêm cash vào danh sách hiển thị trước xe cộ (để xe đè lên tiền về Z-order) */
+    // Add CASH bounty object to spawn tree
     remove(cash);
     add(cash);
 
-    /* Khởi tạo 3 hệ thống (carWidgets được add sau cash nên sẽ đè lên tiền) */
-    initRoadObstacles();    // A) Đường — lúc này roadLanes[i].y mới được khởi tạo (160, 192, 224, 256)
-    initRiverLogs();        // B) Sông
-    initFinishZone();       // C) Đích (lá sen + cá sấu tĩnh)
+    // Init background
+    initRoadObstacles();    // Lane
+    initRiverLogs();        // River
+    initFinishZone();       // Finish zone
 
-    /* Sau khi roadLanes đã có tọa độ Y chuẩn xác, sinh vị trí cash ngẫu nhiên trên các làn đường */
+    // Add cash to screen
     spawnRandomCash();
 
-    /* Đảm bảo cat luôn nằm trên cùng (z-order cao nhất) */
+    // Add main character (cat) in to spawn tree
     remove(cat);
     add(cat);
 
-    /* Khởi tạo số tim (3 tim ban đầu) */
+    // Add 3 heart life into screen
     lives = 3;
     heart.setVisible(true);
     heart.invalidate();
@@ -123,17 +94,13 @@ void Screen2View::updateScore(uint32_t currentScore)
     score.invalidate();
 }
 
-/* ================================================================
- *  GAME LOOP — mỗi frame
- * ================================================================ */
+// MAIN GAME LOOP
 void Screen2View::handleTickEvent()
 {
     tickCount++;
 
-    /* Ô tô chạy ở tốc độ 1/3 (update mỗi 3 tick -> 20 fps) */
     if (tickCount % 3 == 0)
     {
-        /* Cập nhật ĐƯỜNG (xe di chuyển) */
         for (int i = 0; i < NUM_ROAD_LANES; i++)
         {
             updateRoadLane(i);
@@ -141,17 +108,15 @@ void Screen2View::handleTickEvent()
         renderCars();
     }
 
-    /* Khúc gỗ chạy nhanh hơn ở tốc độ 1/2 (update mỗi 2 tick -> 30 fps) */
     if (tickCount % 2 == 0)
     {
-        /* Cập nhật SÔNG (gỗ trôi) */
         for (int i = 0; i < NUM_RIVER_LANES; i++)
         {
             updateRiverLane(i);
         }
         renderLogs();
 
-        /* Nếu cat đang đứng trên sông và trên gỗ -> cuốn theo gỗ trôi */
+        // Cat flow with wood logs
         int16_t catY = cat.getY();
         for (int i = 0; i < NUM_RIVER_LANES; i++)
         {
@@ -167,7 +132,6 @@ void Screen2View::handleTickEvent()
                     int16_t logX = riverLanes[i].logs[j].x;
                     int16_t logW = logTypeDefs[riverLanes[i].logs[j].typeIdx].width;
 
-                    /* Kiểm tra cat đứng trên khúc gỗ (dung sai 6px từ 2 bên mép) */
                     if (catX + catW - 6 > logX && catX + 6 < logX + logW)
                     {
                         onLog = true;
@@ -178,7 +142,7 @@ void Screen2View::handleTickEvent()
                 if (onLog)
                 {
                     int16_t newCatX = catX + (riverLanes[i].speed * riverLanes[i].dir);
-                    /* Nếu bị cuốn trôi hẳn ra ngoài màn hình -> mất mạng như rơi xuống sông */
+                    // If cat go out screen, cat loose life
                     if (newCatX + catW < 0 || newCatX > SCREEN_W)
                     {
                         resetCatPositionAndLoseLife();
@@ -196,7 +160,7 @@ void Screen2View::handleTickEvent()
         }
     }
 
-    /* Kiểm tra sinh cash ngẫu nhiên theo số tick khi chưa có cash trên màn hình */
+    // Random spawn cash
     if (hasCash == 0)
     {
         if (randRange(0,100) == 71)
@@ -205,12 +169,11 @@ void Screen2View::handleTickEvent()
         }
     }
 
-    /* Kiểm tra va chạm xe sau mỗi tick */
     checkCollisions();
 }
 
 /* ================================================================
- *                       P H Ầ N   Đ Ư Ờ N G
+ *                       LANE SITE
  * ================================================================ */
 
 void Screen2View::hideDesignerCars()
@@ -253,7 +216,6 @@ void Screen2View::initRoadObstacles()
         }
     }
 
-    /* Đặt 1-2 xe ban đầu */
     for (int i = 0; i < NUM_ROAD_LANES; i++)
     {
         RoadLane& lane = roadLanes[i];
@@ -380,17 +342,7 @@ void Screen2View::renderCars()
 }
 
 /* ================================================================
- *                       P H Ầ N   S Ô N G
- *  ─────────────────────────────────────────────────────────────
- *  • Gỗ trôi theo dòng nước (1 chiều/làn, tốc độ khác nhau)
- *  • Người chơi phải nhảy lên gỗ để băng sông
- *  • Rơi xuống nước (không trên gỗ) = chết
- *  • Khi đứng trên gỗ → trôi theo gỗ (cần code player sau)
- *
- *  Layout sông:
- *    Làn 0: Y=96  (river_1) — gần vùng an toàn giữa
- *    Làn 1: Y=64  (river_2) — giữa
- *    Làn 2: Y=32  (river_1) — gần đích
+ *                       RIVER SITE
  * ================================================================ */
 
 void Screen2View::hideDesignerRiverObjs()
@@ -414,8 +366,6 @@ void Screen2View::initRiverLogs()
         rl.dir   = (i % 2 == 0) ? firstDir : -firstDir;
         rl.speed = randRange(RIVER_SPEED_MIN, RIVER_SPEED_MAX);
 
-        /* Sông spawn thường xuyên hơn đường vì
-         * người chơi CẦN gỗ để bước lên */
         int16_t base = (int16_t)(60 / rl.speed);
         rl.spawnMin   = base;
         rl.spawnMax   = base * 2;
@@ -432,8 +382,6 @@ void Screen2View::initRiverLogs()
         }
     }
 
-    /* Đặt 1-2 khúc gỗ ban đầu trên mỗi làn sông
-     * để người chơi thấy ngay có đường đi */
     for (int i = 0; i < NUM_RIVER_LANES; i++)
     {
         RiverLane& rl = riverLanes[i];
@@ -518,7 +466,7 @@ void Screen2View::trySpawnLog(int idx)
     }
     if (freeSlot < 0) return;
 
-    /* Random loại gỗ: 50% nhỏ, 50% lớn */
+    // Random wood log type
     uint8_t logType = (uint8_t)(nextRandom() % NUM_LOG_TYPES);
     int16_t oW = logTypeDefs[logType].width;
 
@@ -564,27 +512,11 @@ void Screen2View::renderLogs()
 }
 
 /* ================================================================
- *             P H Ầ N   Đ Í C H   (FINISH ZONE)
- *
- *  Vùng đích ở Y=0 (grass3) — VẬT THỂ TĨNH, không di chuyển.
- *  ─────────────────────────────────────────────────────────────
- *  Giống Happy Hopper / Frogger cổ điển:
- *  • Lá sen (lotus_pad, 32×32): AN TOÀN — đích đến
- *  • Cá sấu (croccodie, 64×32): NGUY HIỂM — giẫm vào = chết
- *  • Người chơi phải nhắm vào lá sen để hoàn thành
- *
- *  Bố trí 4 vật thể ở đích:
- *  ─────────────────────────────────────────────────────────────
- *  Vị trí 0 (X=0):   LÁ SEN   — luôn an toàn (đảm bảo chơi được)
- *  Vị trí 1 (X=48):  RANDOM   — lá sen hoặc cá sấu
- *  Vị trí 2 (X=128): RANDOM   — lá sen hoặc cá sấu
- *  Vị trí 3 (X=208): LÁ SEN   — luôn an toàn (đảm bảo chơi được)
- *
- *  → Luôn có ít nhất 2 lá sen → game luôn có lời giải!
+ *             FINISH ZONE
  * ================================================================ */
 void Screen2View::initFinishZone()
 {
-    /* Ẩn hết tất cả vật thể ở vùng đích (bỏ lá sen, cá sấu) */
+	// Hide all leaf and croc
     for (int i = 0; i < NUM_FINISH_OBJS; i++)
     {
         finishSlots[i].active = false;
@@ -593,9 +525,7 @@ void Screen2View::initFinishZone()
     }
 }
 
-/* ================================================================
- *  BỘ SINH SỐ NGẪU NHIÊN (xorshift32)
- * ================================================================ */
+// Random Generator
 uint32_t Screen2View::nextRandom()
 {
     rngState ^= rngState << 13;
@@ -611,13 +541,11 @@ int16_t Screen2View::randRange(int16_t lo, int16_t hi)
     return lo + (int16_t)(nextRandom() % range);
 }
 
-/* ================================================================
- *  DI CHUYỂN CAT THEO SỰ KIỆN NÚT NHẤN (MỖI BƯỚC = 1 LÀN ĐƯỜNG)
- * ================================================================ */
+// Cat moving handle
 void Screen2View::moveCat(uint16_t cmd)
 {
-    int16_t stepY = OBJ_H;                         /* 32 pixel — đi lên/xuống bằng 1 làn đường */
-    int16_t stepX = (int16_t)((OBJ_H * 60) / 100); /* 19 pixel — sang trái/phải bằng 60% đi lên/xuống */
+    int16_t stepY = OBJ_H;
+    int16_t stepX = (int16_t)((OBJ_H * 60) / 100);
     int16_t newX = cat.getX();
     int16_t newY = cat.getY();
 
@@ -628,7 +556,7 @@ void Screen2View::moveCat(uint16_t cmd)
         if (newX < 0)
         {
             newX = 0;
-            if (newX >= cat.getX()) return; /* Không ra ngoài màn hình bên trái */
+            if (newX >= cat.getX()) return;
         }
         break;
 
@@ -637,7 +565,7 @@ void Screen2View::moveCat(uint16_t cmd)
         if (newX + cat.getWidth() > SCREEN_W)
         {
             newX = SCREEN_W - cat.getWidth();
-            if (newX <= cat.getX()) return; /* Không ra ngoài màn hình bên phải */
+            if (newX <= cat.getX()) return;
         }
         break;
 
@@ -646,7 +574,7 @@ void Screen2View::moveCat(uint16_t cmd)
         if (newY < 0)
         {
             newY = 0;
-            if (newY >= cat.getY()) return; /* Không ra ngoài màn hình phía trên */
+            if (newY >= cat.getY()) return;
         }
         break;
 
@@ -655,7 +583,7 @@ void Screen2View::moveCat(uint16_t cmd)
         if (newY + cat.getHeight() > 320)
         {
             newY = 320 - cat.getHeight();
-            if (newY <= cat.getY()) return; /* Không ra ngoài màn hình phía dưới */
+            if (newY <= cat.getY()) return;
         }
         break;
 
@@ -669,22 +597,21 @@ void Screen2View::moveCat(uint16_t cmd)
         cat.setXY(newX, newY);
         cat.invalidate();
 
-        /* Kiểm tra va chạm ngay sau bước nhảy */
+        if (presenter)
+        {
+            presenter->playSound(SOUND_JUMP);
+        }
         checkCollisions();
     }
 }
 
-/* ================================================================
- *  XỬ LÝ VA CHẠM & TIM
- * ================================================================ */
+// Cat collision + Life manager
 void Screen2View::resetCatPositionAndLoseLife()
 {
-    /* Đưa cat về vị trí xuất phát (104, 288) */
     cat.invalidate();
     cat.setXY(104, 288);
     cat.invalidate();
 
-    /* Trừ đi 1 tim */
     lives--;
     if (lives == 2)
     {
@@ -701,7 +628,12 @@ void Screen2View::resetCatPositionAndLoseLife()
         heart.setVisible(false);
         heart.invalidate();
 
-        /* Khi hết tim, tạm thời hồi lại 3 tim và cho phép chơi tiếp (hoặc reset game) */
+        if (presenter)
+        {
+            presenter->playSound(SOUND_GAME_OVER);
+        }
+
+        // Go to game over screen
         application().gotoScreen3ScreenNoTransition();
     }
 }
@@ -711,12 +643,12 @@ void Screen2View::checkCollisions()
     int16_t catX = cat.getX();
     int16_t catY = cat.getY();
     int16_t catW = cat.getWidth();
-    int16_t margin = 4; /* dung sai 4px để va chạm chính xác, không gây ức chế */
+    int16_t margin = 4;
 
-    /* 0. Kiểm tra nếu mèo đã sang được bờ bên kia (Y = 0 / FINISH_Y) */
+    // Cat across street success
     if (catY == FINISH_Y)
     {
-        /* Sang bờ bên kia thành công! Reset về vị trí ban đầu (104, 288) và KHÔNG mất tim */
+        //Reset cat position and add score
         cat.invalidate();
         cat.setXY(104, 288);
         cat.invalidate();
@@ -727,7 +659,7 @@ void Screen2View::checkCollisions()
         return;
     }
 
-    /* 1. Kiểm tra va chạm với xe trên ĐƯỜNG (khi cat đứng trên các làn Y = 160, 192, 224, 256) */
+    // Check collision
     for (int i = 0; i < NUM_ROAD_LANES; i++)
     {
         if (catY == roadLanes[i].y)
@@ -739,37 +671,40 @@ void Screen2View::checkCollisions()
                 int16_t carX = roadLanes[i].cars[j].x;
                 int16_t carW = carTypeDefs[roadLanes[i].cars[j].typeIdx].width;
 
-                /* Nếu cat và xe giao nhau theo trục X */
                 if (catX + margin < carX + carW && catX + catW - margin > carX)
                 {
+                    if (presenter)
+                    {
+                        presenter->playSound(SOUND_CRASH);
+                    }
                     resetCatPositionAndLoseLife();
                     return;
                 }
             }
 
-            /* Nếu an toàn không bị xe đâm, kiểm tra xem có nhặt được tiền (cash) không */
+            // Cat touch cash bounty
             if (hasCash == 1 && cash.isVisible() && catY == cash.getY())
             {
                 int16_t cashX = cash.getX();
                 int16_t cashW = (cash.getWidth() > 0) ? cash.getWidth() : 32;
                 if (catX + margin < cashX + cashW && catX + catW - margin > cashX)
                 {
-                    /* Nhặt được tiền -> ẩn cash đi và gán hasCash = 0 */
                     cash.setVisible(false);
                     cash.invalidate();
                     hasCash = 0;
                     if (presenter)
                     {
+                        presenter->playSound(SOUND_CASH);
                         presenter->addScore(2);
                     }
                 }
             }
 
-            return; /* Đang ở trên đường bộ (và không đụng xe), an toàn */
+            return;
         }
     }
 
-    /* 2. Kiểm tra khi đứng trên SÔNG (khi cat đứng trên các làn Y = 32, 64, 96) */
+    // Check cat in the river site
     for (int i = 0; i < NUM_RIVER_LANES; i++)
     {
         if (catY == riverLanes[i].y)
@@ -782,7 +717,7 @@ void Screen2View::checkCollisions()
                 int16_t logX = riverLanes[i].logs[j].x;
                 int16_t logW = logTypeDefs[riverLanes[i].logs[j].typeIdx].width;
 
-                /* Nếu cat có chân đứng trên khúc gỗ này (dung sai 6px từ 2 bên mép) */
+                // Cat stand in a wood log
                 if (catX + catW - 6 > logX && catX + 6 < logX + logW)
                 {
                     onLog = true;
@@ -790,27 +725,28 @@ void Screen2View::checkCollisions()
                 }
             }
 
-            /* Nếu dẫm lên sông mà KHÔNG có khúc gỗ ở dưới -> rớt xuống nước chết (như đâm xe) */
             if (!onLog)
             {
+                if (presenter)
+                {
+                    presenter->playSound(SOUND_SINK_WATER);
+                }
                 resetCatPositionAndLoseLife();
                 return;
             }
-            return; /* Đang đứng an toàn trên gỗ */
+            return;
         }
     }
 }
 
-/* ================================================================
- *  SINH CASH NGẪU NHIÊN TRÊN CÁC LÀN ĐƯỜNG
- * ================================================================ */
+// Spawn CASH random
 void Screen2View::spawnRandomCash()
 {
-    /* Chọn ngẫu nhiên 1 trong 4 làn đường (0 đến 3) */
+	// Random lane
     int laneIdx = nextRandom() % NUM_ROAD_LANES;
     int16_t newY = roadLanes[laneIdx].y;
 
-    /* Chọn ngẫu nhiên vị trí X trên làn đó */
+    // Random X position of cash
     int16_t maxW = (cash.getWidth() > 0) ? cash.getWidth() : 32;
     int16_t newX = randRange(10, SCREEN_W - maxW - 10);
     hasCash = 1;

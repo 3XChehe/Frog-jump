@@ -1,5 +1,6 @@
 #include <gui/model/Model.hpp>
 #include <gui/model/ModelListener.hpp>
+#include <gui/sound/SoundManager.hpp>
 #include "main.h"
 #include "cmsis_os2.h"
 
@@ -43,5 +44,29 @@ void Model::notifyScore()
     if (modelListener != 0)
     {
         modelListener->scoreUpdated(currentScore, highscore);
+    }
+}
+
+void Model::playSound(SoundEvent sound)
+{
+    switch (sound)
+    {
+    case SOUND_JUMP:
+        SoundManager::getInstance().playJumpSound();
+        break;
+    case SOUND_CASH:
+        SoundManager::getInstance().playCashSound();
+        break;
+    case SOUND_CRASH:
+        SoundManager::getInstance().playCrashSound();
+        break;
+    case SOUND_SINK_WATER:
+        SoundManager::getInstance().playSinkWaterSound();
+        break;
+    case SOUND_GAME_OVER:
+        SoundManager::getInstance().playGameOverSound();
+        break;
+    default:
+        break;
     }
 }
