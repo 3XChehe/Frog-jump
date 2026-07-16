@@ -18,14 +18,14 @@
 
 ## 🌟 1. Giới thiệu
 
-**Frog Jump** là dự án game giải trí phản xạ được thiết kế và tối ưu hoá cho dòng vi điều khiển nhúng hiệu năng cao **STM32F429I-DISCO** của STMicroelectronics. Dự án là sự kết hợp hoàn hảo giữa nền tảng đồ hoạ hiện đại **TouchGFX 4.26.1**, hệ điều hành thời gian thực **FreeRTOS** và hệ thống điều khiển ngoại vi mức thấp **STM32 HAL Driver**.
+**Frog Jump** là dự án game lấy cảm hứng từ game Frogger, được thiết kế và tối ưu hoá cho dòng vi điều khiển nhúng hiệu năng cao **STM32F429I-DISCO** của STMicroelectronics. Dự án là sự kết hợp hoàn hảo giữa nền tảng đồ hoạ hiện đại **TouchGFX 4.26.1**, hệ điều hành thời gian thực **FreeRTOS** và hệ thống điều khiển ngoại vi mức thấp **STM32 HAL Driver**.
 
-Trong game, người chơi sẽ điều khiển chú ếch khéo léo nhảy qua các khúc gỗ (`log`), lá sen (`lotus_pad`) trên dòng sông (`river`), né tránh xe cộ (`car`) đang lưu thông tấp nập trên đường phố (`road`), đồng thời thu thập những đồng tiền vàng (`cash`) để đạt được điểm số cao kỷ lục (High Score).
+Trong game, người chơi sẽ điều khiển nhân vật Mèo khéo léo nhảy qua các khúc gỗ trên dòng sông, né tránh xe cộ đang lưu thông tấp nập trên đường phố, đồng thời thu thập những cọc tiền dollar và hướng tới bờ bên kia để đạt được điểm số.
 
-### 🚀 Điểm nổi bật kỹ thuật trong dự án:
-- **🎨 Đồ hoạ mượt mà 60 FPS**: Khai thác tối đa sức mạnh của bộ điều khiển màn hình **LTDC** và bộ tăng tốc đồ hoạ phần cứng **DMA2D** trên màn hình TFT LCD 2.4" 240x320.
-- **🎧 Hệ thống âm thanh sống động (Non-Blocking DMA + I2S3)**: Tích hợp bộ quản lý hiệu ứng âm thanh PCM 16-bit (`jump`, `cash`, `crash`, `game_over`) phát thẳng từ bộ nhớ Flash ra chip DAC **CS43L22** thông qua giao thức **I2S3 kết hợp DMA (`DMA1_Stream5`)**, đảm bảo không tiêu tốn RAM và không gây lag giao diện.
-- **⏱️ Quản lý đa luồng thời gian thực (FreeRTOS)**: Phân chia rõ ràng giữa luồng quét phím điều khiển (`StartDefaultTask` ở 50 Hz) và luồng hiển thị giao diện đồ hoạ TouchGFX.
+### Điểm nổi bật kỹ thuật của dự án:
+- **🎨 Đồ hoạ mượt mà**: Khai thác tối đa sức mạnh của bộ điều khiển màn hình **LTDC** và bộ tăng tốc đồ hoạ phần cứng **DMA2D** trên màn hình TFT LCD 2.4" 240x320.
+- **🎧 Âm thanh sống động**: Tích hợp bộ quản lý hiệu ứng âm thanh PCM 16-bit (`jump`, `cash`, `crash`, `game_over`) phát thẳng từ bộ nhớ Flash ra chip DAC **CS43L22** thông qua giao thức **I2S3 kết hợp DMA (`DMA1_Stream5`)**, đảm bảo không gây lag giao diện.
+- **⏱️ Quản lý đa luồng thời gian thực (FreeRTOS)**: Phân chia rõ ràng giữa luồng quét phím điều khiển và luồng hiển thị giao diện đồ hoạ TouchGFX.
 
 ---
 
@@ -34,7 +34,8 @@ Trong game, người chơi sẽ điều khiển chú ếch khéo léo nhảy qua
 ### 🖥️ Yêu cầu phần cứng
 - **Bo mạch phát triển**: [STM32F429I-DISCO](https://www.st.com/en/evaluation-tools/32f429idiscovery.html) (Cores ARM Cortex-M4 @ 180 MHz, 2MB Flash, 256KB SRAM, tích hợp 64Mbit SDRAM và ST-LINK/V2-B).
 - **Màn hình hiển thị**: TFT LCD 2.4" độ phân giải 240x320 pixels (tích hợp IC điều khiển ILI9341 và cảm ứng điện trở STMPE811).
-- **Âm thanh**: Cổng Audio Jack 3.5mm trên mạch (kết nối với IC DAC CS43L22).
+- **Âm thanh**: Loa 3W nối với mạch khuếch đại DAC MAX98357A.
+- **Nút bấm**: 4 nút bấm 4 chân và các dây nối.
 
 ### 📌 Bảng cấu hình chân ngoại vi (Pinout Mapping)
 
@@ -53,14 +54,6 @@ Trong game, người chơi sẽ điều khiển chú ếch khéo léo nhảy qua
 | **`PC10`** | `I2S3_CK` | `GPIO_AF6_SPI3` | Bit Clock (SCK) - Xung nhịp dịch dữ liệu |
 | **`PC12`** | `I2S3_SD` | `GPIO_AF6_SPI3` | Serial Data (MOSI) - Dòng dữ liệu PCM 16-bit ra DAC |
 
-#### 📊 Đo kiểm hiệu năng TouchGFX (Performance Pins)
-| Chân GPIO | Tên tín hiệu | Mục đích đo kiểm bằng Dao động ký (Oscilloscope) |
-| :---: | :---: | :--- |
-| **`PE2`** | `VSYNC_FREQ` | Đo tần số đồng bộ dọc màn hình (VSYNC Signal) |
-| **`PE3`** | `RENDER_TIME` | Đo thời gian xử lý và render từng khung hình |
-| **`PE4`** | `FRAME_RATE` | Đo tốc độ khung hình thực tế (FPS) |
-| **`PE5`** | `MCU_ACTIVE` | Đo tỷ lệ tải hoạt động của CPU Cortex-M4 |
-
 ---
 
 ## 🛠️ 3. Các công cụ cần phải có
@@ -70,7 +63,6 @@ Trong game, người chơi sẽ điều khiển chú ếch khéo léo nhảy qua
 1. **[STM32CubeIDE (v2.1.1)](https://www.st.com/en/development-tools/stm32cubeide.html)**: Môi trường phát triển tích hợp chính (IDE) hỗ trợ biên dịch mã nguồn C/C++, quản lý bộ nhớ và gỡ lỗi (Debug) cho vi điều khiển STM32.
 2. **[TouchGFX Designer (v4.26.1)](https://www.st.com/en/embedded-software/x-cube-touchgfx.html)**: Công cụ thiết kế giao diện đồ hoạ trực quan, quản lý tài nguyên hình ảnh/font chữ và tự động sinh mã nguồn C++ (`Application/User/TouchGFX/generated`).
 3. **[STM32CubeMX (Hardware Config)](https://www.st.com/en/development-tools/stm32cubemx.html)**: Phần mềm cấu hình phần cứng, xung nhịp (`SystemClock_Config` 180 MHz, `PLLI2S` 96 MHz), thiết lập ngoại vi (I2S, DMA, LTDC) và hệ điều hành FreeRTOS.
-4. **[STM32CubeProgrammer](https://www.st.com/en/development-tools/stm32cubeprog.html)**: Cung cấp bộ Driver ST-LINK/V2 USB và hỗ trợ nạp trực tiếp file `.elf / .hex / .bin` xuống bo mạch.
 
 ---
 
@@ -93,13 +85,11 @@ git checkout update-document
 3. Chờ công cụ tự động chuyển đổi tài nguyên và sinh ra toàn bộ mã nguồn C++ vào thư mục `TouchGFX/generated/`. Sau khi hoàn tất, bạn có thể đóng TouchGFX Designer.
 
 ### 🔧 Bước 3: Cập nhật cấu hình phần cứng từ STM32CubeMX (Generate IOC Code)
-> [!NOTE]
-> Bạn chỉ cần thực hiện bước này nếu muốn tùy chỉnh chân GPIO, xung nhịp hoặc các thông số ngoại vi trong file `.ioc`.
 
 1. Nhấp đúp vào file cấu hình **`STM32F429I_DISCO_REV_D01.ioc`** ở thư mục gốc để mở bằng **STM32CubeMX**.
 2. Kiểm tra các thiết lập:
    - **Clock Configuration**: `SYSCLK` = 180 MHz, `PLLI2S` = 96 MHz.
-   - **Multimedia -> I2S3**: `Master Transmit`, `16-bit Data on 16-bit Frame`, `Audio Frequency = 16 KHz`.
+   - **Multimedia -> I2S3**: `Half-Duplex-Master`, `16-bit Data on 16-bit Frame`, `Audio Frequency = 16 KHz`.
 3. Nhấp vào nút **GENERATE CODE** ở góc trên cùng bên phải để cập nhật các file khởi tạo cấu hình trong `Core/Src/` và `Core/Inc/`.
 
 ### 🔨 Bước 4: Nhập vào STM32CubeIDE, Biên dịch và Nạp (Build & Flash)
