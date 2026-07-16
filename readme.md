@@ -73,7 +73,6 @@ Mở Terminal / Git Bash tại thư mục làm việc của bạn và chạy l�
 ```bash
 git clone https://github.com/3XChehe/Frog-jump.git
 cd Frog-jump
-git checkout update-document
 ```
 
 ### 🎨 Bước 2: Phát sinh mã giao diện đồ hoạ (Generate TouchGFX Code)
