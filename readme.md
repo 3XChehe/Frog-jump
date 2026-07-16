@@ -75,7 +75,7 @@ git clone https://github.com/3XChehe/Frog-jump.git
 cd Frog-jump
 ```
 
-### 🎨 Bước 2: Phát sinh mã giao diện đồ hoạ (Generate TouchGFX Code)
+### 🎨 Bước 2: Sinh mã giao diện đồ hoạ (Generate TouchGFX Code)
 > [!IMPORTANT]
 > Đây là bước bắt buộc mỗi khi clone project về máy hoặc khi có cập nhật hình ảnh trong `TouchGFX/assets/images/`.
 
@@ -91,7 +91,7 @@ cd Frog-jump
    - **Multimedia -> I2S3**: `Half-Duplex-Master`, `16-bit Data on 16-bit Frame`, `Audio Frequency = 16 KHz`.
 3. Nhấp vào nút **GENERATE CODE** ở góc trên cùng bên phải để cập nhật các file khởi tạo cấu hình trong `Core/Src/` và `Core/Inc/`.
 
-### 🔨 Bước 4: Nhập vào STM32CubeIDE, Biên dịch và Nạp (Build & Flash)
+### 🔨 Bước 4: Biên dịch và Nạp (Build & Flash)
 1. Khởi động **STM32CubeIDE**, trên thanh menu chọn **File** $\rightarrow$ **Import...**
 2. Chọn **General** $\rightarrow$ **Existing Projects into Workspace** và nhấn **Next**.
 3. Ở dòng *Select root directory*, nhấn **Browse...**, trỏ đến thư mục `STM32CubeIDE/` bên trong project và chọn project **`STM32F429I_DISCO_REV_D01`** rồi bấm **Finish**.
